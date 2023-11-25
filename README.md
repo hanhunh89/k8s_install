@@ -77,3 +77,51 @@ sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address
 #--pod-network-cidr=10.244.0.0/16  pod의 네트워크 대역 설정
 #--apiserver-advertise-address=123.123.123.123  API 서버가 사용할 IP 주소를 명시적으로 지정
 ```
+
+## 설정파일 복사
+```
+sudo su - 
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+## 설정파일 확인
+sudo kubectl config view를  했을 때 아래와 유사하게 나와야 한다.
+```
+root@master:~# kubectl config view
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: DATA+OMITTED
+    server: https://10.178.0.11:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: kubernetes-admin
+  name: kubernetes-admin@kubernetes
+current-context: kubernetes-admin@kubernetes
+kind: Config
+preferences: {}
+users:
+- name: kubernetes-admin
+  user:
+    client-certificate-data: DATA+OMITTED
+    client-key-data: DATA+OMITTED
+```
+
+아래와 같이 나오면 설정파일이 적용이 안된것이다.
+```
+apiVersion: v1
+clusters: null
+contexts: null
+current-context: ""
+kind: Config
+preferences: {}
+users: null
+```
+
+설정파일은 /etc/kubernetes/admin.conf이다
+export $KUBECONFIG=/etc/kubernetes/admin.conf 로 환경변수를 등록하거나,
+cp /etc/kubernetes/admin.conf $HOME/.kube/config 로 홈 디렉토리에 환경변수를 넣어주어야 한다. 
