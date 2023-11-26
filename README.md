@@ -73,8 +73,9 @@ sudo service containerd restart
 ## [master] kubeadm으로 클러스터 생성
 ```
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=[master node ip]
+
 #kubeadm init  쿠버네티스 클러스터 생성
-#--pod-network-cidr=10.244.0.0/16  pod의 네트워크 대역 설정
+#--pod-network-cidr=10.244.0.0/16  pod의 네트워크 대역 설정, flannel 사용시 반드시 설정해야함.
 #--apiserver-advertise-address=123.123.123.123  API 서버가 사용할 IP 주소를 명시적으로 지정
 ```
 
@@ -162,6 +163,9 @@ worker1      NotReady   <none>          2m36s   v1.28.2
 
 
 
+# utils
+ 쿠버네티스 운용 중 유용한 명령어
+ 
 ## 쿠버네티스 구성 삭제 후 재설치[필요시 시행]
 ```
 kubeadm reset 
@@ -170,5 +174,12 @@ sudo apt-get -y autoremove
 sudo rm -rf ~/.kube/*
 
 sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
-sudo kubeadm init
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+#flannel은 kubeadm init 시 반드시 pod-network-cidr설정 필요
+
+
+```
+## 파드 로그 확인
+```
+kubectl describe pod -n kube-system coredns-5dd5756b68-gt5n2
 ```
