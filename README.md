@@ -134,3 +134,41 @@ sudo를 사용하여 쿠버네티스를 구동한다면, root의 홈 디렉토�
 ```
 sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
+
+
+## [master] worker 노드 join 명령어 확인
+아래의 명령어를 쳐서 join 명령어를 확인한다. 
+
+```
+kubeadm token create --print-join-command
+```
+kubeadm join 10.178.0.13:6443 --token b6kdl1.5267eqpt8jd2bi2x --discovery-token-ca-cert-hash sha256:adedc0a64cbacddfe2a86b43ee5465ecb279d67f83206141e8a229c5d72334a2 
+이와 유사한 출력이 나올 것이다. 이를 복사해서 worker node에서 실행한다. 
+
+## [worker] master에 접속
+```
+kubeadm join 10.178.0.13:6443 --token b6kdl1.5267eqpt8jd2bi2x --discovery-token-ca-cert-hash sha256:adedc0a64cbacddfe2a86b43ee5465ecb279d67f83206141e8a229c5d72334a2
+```
+
+## [master] worker가 잘 접속되었는지 확인
+```
+sudo kubectl get nodes
+```
+아래와 같이 worker1이 추가된 것을 확인할 수 있다. 끗.
+
+NAME         STATUS     ROLES           AGE     VERSION
+instance-1   NotReady   control-plane   24m     v1.28.2
+worker1      NotReady   <none>          2m36s   v1.28.2
+
+
+
+## 쿠버네티스 구성 삭제 후 재설치[필요시 시행]
+```
+kubeadm reset 
+sudo apt-get -y purge kubeadm kubectl kubelet kubernetes-cni
+sudo apt-get -y autoremove
+sudo rm -rf ~/.kube/*
+
+sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
+sudo kubeadm init
+```
