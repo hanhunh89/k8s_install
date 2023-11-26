@@ -78,7 +78,7 @@ sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address
 #--apiserver-advertise-address=123.123.123.123  API 서버가 사용할 IP 주소를 명시적으로 지정
 ```
 
-## 설정파일 복사
+## [master] 설정파일 복사
 ```
 sudo su - 
 mkdir -p $HOME/.kube
@@ -86,7 +86,7 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
-## 설정파일 확인
+## [master] 설정파일 확인
 sudo kubectl config view를  했을 때 아래와 유사하게 나와야 한다.
 ```
 root@master:~# kubectl config view
@@ -122,6 +122,15 @@ preferences: {}
 users: null
 ```
 
-설정파일은 /etc/kubernetes/admin.conf이다
-export $KUBECONFIG=/etc/kubernetes/admin.conf 로 환경변수를 등록하거나,
-cp /etc/kubernetes/admin.conf $HOME/.kube/config 로 홈 디렉토리에 환경변수를 넣어주어야 한다. 
+설정파일은 /etc/kubernetes/admin.conf이다<br>
+export $KUBECONFIG=/etc/kubernetes/admin.conf 로 환경변수를 등록하거나,<br>
+cp /etc/kubernetes/admin.conf $HOME/.kube/config 로 홈 디렉토리에 환경변수를 넣어주어야 한다. <br>
+
+sudo를 사용하여 쿠버네티스를 구동한다면, root의 홈 디렉토리에 설정파일을 넣어주어야 한다. 
+
+
+## [master] 네트워크 설정
+서로 다른 pods간 통신을 위해서는 CNI 플러그인이 필요하다. 
+```
+sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
