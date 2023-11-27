@@ -187,3 +187,6 @@ kubectl describe pod -n kube-system coredns-5dd5756b68-gt5n2
 ```
 kubectl delete pod -n default my-httpd-7547bdb59f-rhntx
 ```
+
+
+https://aoc55.tistory.com/53 참고
