@@ -183,3 +183,7 @@ sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 ```
 kubectl describe pod -n kube-system coredns-5dd5756b68-gt5n2
 ```
+## 파드 삭제
+```
+kubectl delete pod -n default my-httpd-7547bdb59f-rhntx
+```
