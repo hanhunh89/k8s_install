@@ -188,5 +188,22 @@ kubectl describe pod -n kube-system coredns-5dd5756b68-gt5n2
 kubectl delete pod -n default my-httpd-7547bdb59f-rhntx
 ```
 
+```
+sudo apt-get install docker.io
+```
+이렇게 하고 나니까 /etc/containerd/config.toml에 
+새로운 옵션이 생겼다. 
 
-https://aoc55.tistory.com/53 참고
+```
+#/etc/containerd/config.toml
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri"]
+    [plugins."io.containerd.grpc.v1.cri".cni]
+      bin_dir = "/usr/lib/cni"
+      conf_dir = "/etc/cni/net.d"
+    sandbox_image = "registry.k8s.io/pause:3.2"
+  [plugins."io.containerd.internal.v1.opt"]
+    path = "/var/lib/containerd/opt"
+```
+sandbox_image는 kubenetes 공식홈페이지에서 보고 추가한것이다.<br>
+에러가 안나는것같다. 도대체 무엇이 문제인가...
