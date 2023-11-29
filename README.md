@@ -211,3 +211,7 @@ sandbox_image는 kubenetes 공식홈페이지에서 보고 추가한것이다.<b
 에러가 안나는것같다. 도대체 무엇이 문제인가...<br>
 docker.io가 제대로 설치가 안된것인가? 일반적 docker 설치 프로세스에 docker.io가 
 설치 되는지 확인해보자..미칠것같다..
+
+
+<br>
+https://terianp.tistory.com/177 참고사이트
