@@ -8,15 +8,15 @@ gcp e2c에서 k8s를 수동으로 설치한다. <br>
 sudo apt-get update && sudo apt-get upgrade
 ```
 
-## [master,worker] apt-transport-https, curl 설치
+## [master,worker] apt-transport-https, curl install
 ```
 sudo apt install -y apt-transport-https curl
 ```
 
 ## [master,worker] docker install 
-https://docs.docker.com/engine/install/debian/ 를 참조함
+you can find more detail https://docs.docker.com/engine/install/debian/
 ```
-#old 버전 삭제. 처음 설치하면 안해도됨. 
+#[optional] delete old version
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done   
 # Add Docker's official GPG key:
 sudo apt-get update
@@ -40,46 +40,65 @@ sudo docker run hello-world
 
 ```
 
-## [master,worker] docker run
+## [master,worker] docker run  ////////삭제 예정
 ```
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo systemctl status docker # running 확인
 ```
 
-## [master,worker] swap mem 비활성화
+## [master,worker] swap mem off
 ```
-sudo swapoff -a # swap 비활성화
-sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab # /etc/fstab파일의 swap 관련 내용 모두 주
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab # commenting out swap option in /etc/fstab
 ```
-## [master,worker] kubelet, kubeadm, kubectl, kubernetes-cni 패키지가 위치한 레포지터리 지정
+## [master,worker] repository for kubelet, kubeadm, kubectl, kubernetes-cni 
 ```
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/kubernetes-archive-keyring.gpg add -
 sudo apt-get update
 ```
 
-## [master,worker] k8s 설치
+## [master,worker] install k8s
 ```
 sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
 ```
 
-## [master] containerd 설정 삭제 
+## [master] change containerd config 
+you can find detail in https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
 ```
-sudo rm /etc/containerd/config.toml
+# change config.toml file to default
+sudo sh -c 'containerd config default > /etc/containerd/config.toml'
+# change sandbox_image version
+sudo sed -i 's|sandbox_image = "registry\.k8s\.io/pause:3\.6"|sandbox_image = "registry\.k8s\.io/pause:3.9"|g' /etc/containerd/config.toml
+# change systemd option
+sudo sed -i 's|SystemdCgroup = false|SystemdCgroup = true|g' /etc/containerd/config.toml
+
 sudo service containerd restart
 ```
+Why make default config file?<br>
+In k8s document, you can make config.toml with small config.
+But... I got errorr... I don't know why.<br>
+But, if you write empty config, containerd read default config.<br>
+So, i just make config file with default config, and change it.<br>
+I don't think it is perfect why, but it works!<br>
 
-## [master] kubeadm으로 클러스터 생성
+And, why i use sandbox_image version 3.9? <br>
+When i use default version, 3.6, i get error. <br>
+error said, i have to use version 3.9. So i changed it.<br>
+<p>$\bf{\large{\color{#DD6565}If \ you \ use \ not \ good \ sandbox \ version, \ your \ pod \ go \ to \ CrashLoopBackOff, \ restart \ again \ again \ again... }}$</p>
+
+
+## [master] create cluster with kubeadm
 ```
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=[master node ip]
 
-#kubeadm init  쿠버네티스 클러스터 생성
-#--pod-network-cidr=10.244.0.0/16  pod의 네트워크 대역 설정, flannel 사용시 반드시 설정해야함.
-#--apiserver-advertise-address=123.123.123.123  API 서버가 사용할 IP 주소를 명시적으로 지정
+#kubeadm init   create k8s cluster
+#--pod-network-cidr=10.244.0.0/16  set pod network range
+#--apiserver-advertise-address=123.123.123.123  set API ip. default is the server that you create cluster
 ```
 
-## [master] 설정파일 복사
+## [master] copy config file to your $home
 ```
 sudo su - 
 mkdir -p $HOME/.kube
@@ -87,8 +106,8 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
-## [master] 설정파일 확인
-sudo kubectl config view를  했을 때 아래와 유사하게 나와야 한다.
+## [master] check your config file
+sudo kubectl config view -> you have to get result like that.
 ```
 root@master:~# kubectl config view
 apiVersion: v1
@@ -112,7 +131,7 @@ users:
     client-key-data: DATA+OMITTED
 ```
 
-아래와 같이 나오면 설정파일이 적용이 안된것이다.
+if you see result like that, you don't have config file in $home
 ```
 apiVersion: v1
 clusters: null
@@ -122,12 +141,23 @@ kind: Config
 preferences: {}
 users: null
 ```
+if you run in root, paht is "/root/.kube/config"
 
-설정파일은 /etc/kubernetes/admin.conf이다<br>
-export $KUBECONFIG=/etc/kubernetes/admin.conf 로 환경변수를 등록하거나,<br>
-cp /etc/kubernetes/admin.conf $HOME/.kube/config 로 홈 디렉토리에 환경변수를 넣어주어야 한다. <br>
 
-sudo를 사용하여 쿠버네티스를 구동한다면, root의 홈 디렉토리에 설정파일을 넣어주어야 한다. 
+## confirm running k8s
+all pod is peding or running.<br>
+if you got crashloopbackoff, .... cry..
+```
+$ kubectl get pods --all-namespaces
+NAMESPACE     NAME                                  READY   STATUS    RESTARTS   AGE
+kube-system   coredns-5dd5756b68-c9jrf              0/1     Pending   0          3m21s
+kube-system   coredns-5dd5756b68-wf8bb              0/1     Pending   0          3m21s
+kube-system   etcd-master-node                      1/1     Running   0          3m35s
+kube-system   kube-apiserver-master-node            1/1     Running   0          3m35s
+kube-system   kube-controller-manager-master-node   1/1     Running   0          3m35s
+kube-system   kube-proxy-42dsg                      1/1     Running   0          3m21s
+kube-system   kube-scheduler-master-node            1/1     Running   0          3m35s```
+```
 
 
 ## [master] 네트워크 설정
