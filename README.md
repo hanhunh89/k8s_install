@@ -1,7 +1,8 @@
 # k8s install
 
 
-
+date : 2023.11.30.<br>
+kubectl version : 1.28.2
 
 install k8s in gcp e2c<br>
 e2c use debian
