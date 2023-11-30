@@ -1,4 +1,6 @@
-# k8s_study
+# k8s install
+
+
 
 
 install k8s in gcp e2c<br>
