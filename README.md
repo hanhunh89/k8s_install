@@ -1,7 +1,12 @@
 # k8s_study
 
-gcp e2c에서 k8s를 수동으로 설치한다. <br>
-참고 : e2c는 debian linux를 사용한다. 
+
+install k8s in gcp e2c<br>
+e2c use debian
+
+[master] indicates performing tasks on the master server.<br>
+[worker] indicates performing tasks on the master server.<br>
+[master, worker] means both.
 
 ## [master,worker] linux update
 ```
@@ -37,14 +42,6 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 #check running
 sudo docker run hello-world
-
-```
-
-## [master,worker] docker run  ////////삭제 예정
-```
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo systemctl status docker # running 확인
 ```
 
 ## [master,worker] swap mem off
@@ -52,6 +49,7 @@ sudo systemctl status docker # running 확인
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab # commenting out swap option in /etc/fstab
 ```
+
 ## [master,worker] repository for kubelet, kubeadm, kubectl, kubernetes-cni 
 ```
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
@@ -84,7 +82,7 @@ So, i just make config file with default config, and change it.<br>
 I don't think it is perfect why, but it works!<br>
 
 And, why i use sandbox_image version 3.9? <br>
-When i use default version, 3.6, i get error. <br>
+When i use default version, 3.6, i get error in "kubeadm init" <br>
 error said, i have to use version 3.9. So i changed it.<br>
 <p>$\bf{\large{\color{#DD6565}If \ you \ use \ not \ good \ sandbox \ version, \ your \ pod \ go \ to \ CrashLoopBackOff, \ restart \ again \ again \ again... }}$</p>
 
@@ -141,12 +139,12 @@ kind: Config
 preferences: {}
 users: null
 ```
-if you run in root, paht is "/root/.kube/config"
+if you run in root, path is "/root/.kube/config"
 
 
-## confirm running k8s
+## [master] confirm running k8s
 all pod is peding or running.<br>
-if you got crashloopbackoff, .... cry..
+if you got crashloopbackoff, .... cry.... and go to "change containerd config"
 ```
 $ kubectl get pods --all-namespaces
 NAMESPACE     NAME                                  READY   STATUS    RESTARTS   AGE
@@ -160,43 +158,67 @@ kube-system   kube-scheduler-master-node            1/1     Running   0         
 ```
 
 
-## [master] 네트워크 설정
-서로 다른 pods간 통신을 위해서는 CNI 플러그인이 필요하다. 
+## [master] install CNI flugin, flannel
+for networking within pod in different node, you have to install CNI flugin<br>
+in this project, we install flannel 
 ```
-sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-```
+mamdjango2@master-node:~$ sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+namespace/kube-flannel created
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.apps/kube-flannel-ds created
 
+mamdjango2@master-node:~$ sudo kubectl get pods --all-namespaces
 
-## [master] worker 노드 join 명령어 확인
-아래의 명령어를 쳐서 join 명령어를 확인한다. 
+NAMESPACE      NAME                                  READY   STATUS    RESTARTS   AGE
+kube-flannel   kube-flannel-ds-gtvqz                 1/1     Running   0          16s
+kube-system    coredns-5dd5756b68-c9jrf              1/1     Running   0          41m
+kube-system    coredns-5dd5756b68-wf8bb              1/1     Running   0          41m
+kube-system    etcd-master-node                      1/1     Running   0          42m
+kube-system    kube-apiserver-master-node            1/1     Running   0          42m
+kube-system    kube-controller-manager-master-node   1/1     Running   0          42m
+kube-system    kube-proxy-42dsg                      1/1     Running   0          41m
+kube-system    kube-scheduler-master-node            1/1     Running   0          42m
+```
+cordns and flannel have to be Running.
+
+## [master] find join command 
 
 ```
-kubeadm token create --print-join-command
-```
+$sudo kubeadm token create --print-join-command
 kubeadm join 10.178.0.13:6443 --token b6kdl1.5267eqpt8jd2bi2x --discovery-token-ca-cert-hash sha256:adedc0a64cbacddfe2a86b43ee5465ecb279d67f83206141e8a229c5d72334a2 
-이와 유사한 출력이 나올 것이다. 이를 복사해서 worker node에서 실행한다. 
+```
+copy "kubeadm join ~ " and paste on workter node.
 
-## [worker] master에 접속
+## [worker] rm containerd config
 ```
-kubeadm join 10.178.0.13:6443 --token b6kdl1.5267eqpt8jd2bi2x --discovery-token-ca-cert-hash sha256:adedc0a64cbacddfe2a86b43ee5465ecb279d67f83206141e8a229c5d72334a2
+sudo rm /etc/containerd/config
+sudo service containerd restart
 ```
 
-## [master] worker가 잘 접속되었는지 확인
+## [worker] join to master
 ```
-sudo kubectl get nodes
+sudo kubeadm join 10.178.0.13:6443 --token b6kdl1.5267eqpt8jd2bi2x --discovery-token-ca-cert-hash sha256:adedc0a64cbacddfe2a86b43ee5465ecb279d67f83206141e8a229c5d72334a2
 ```
-아래와 같이 worker1이 추가된 것을 확인할 수 있다. 끗.
 
-NAME         STATUS     ROLES           AGE     VERSION
-instance-1   NotReady   control-plane   24m     v1.28.2
-worker1      NotReady   <none>          2m36s   v1.28.2
+## [master] Check if the worker has successfully joined.
+
+```
+$ sudo kubectl get nodes
+NAME          STATUS   ROLES           AGE    VERSION
+master-node   Ready    control-plane   60m    v1.28.2
+worker1       Ready    <none>          117s   v1.28.2
+```
+you can find worker1. 
 
 
 
 # utils
- 쿠버네티스 운용 중 유용한 명령어
+
  
-## 쿠버네티스 구성 삭제 후 재설치[필요시 시행]
+## remove k8s and install again
 ```
 kubeadm reset 
 sudo apt-get -y purge kubeadm kubectl kubelet kubernetes-cni
@@ -205,57 +227,14 @@ sudo rm -rf ~/.kube/*
 
 sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
-#flannel은 kubeadm init 시 반드시 pod-network-cidr설정 필요
 
 
 ```
-## 파드 로그 확인
+## check pod log
 ```
 kubectl describe pod -n kube-system coredns-5dd5756b68-gt5n2
 ```
-## 파드 삭제
+## delete pod
 ```
 kubectl delete pod -n default my-httpd-7547bdb59f-rhntx
-```
-
-
-## 쿠버네티스 지옥... 
-```
-sudo apt-get install docker.io
-```
-이렇게 하고 나니까 /etc/containerd/config.toml에 
-새로운 옵션이 생겼다. 
-
-```
-#/etc/containerd/config.toml
-[plugins]
-  [plugins."io.containerd.grpc.v1.cri"]
-    [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "/usr/lib/cni"
-      conf_dir = "/etc/cni/net.d"
-    sandbox_image = "registry.k8s.io/pause:3.2"
-  [plugins."io.containerd.internal.v1.opt"]
-    path = "/var/lib/containerd/opt"
-```
-sandbox_image는 kubenetes 공식홈페이지에서 보고 추가한것이다.<br>
-에러가 안나는것같다. 도대체 무엇이 문제인가...<br>
-docker.io가 제대로 설치가 안된것인가? 일반적 docker 설치 프로세스에 docker.io가 
-설치 되는지 확인해보자..미칠것같다..
-
-
-<br>
-https://terianp.tistory.com/177 참고사이트
-
-
-
-```
-version = 2
-[plugins]
-  [plugins."io.containerd.grpc.v1.cri"]
-   [plugins."io.containerd.grpc.v1.cri".containerd]
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-          runtime_type = "io.containerd.runc.v2"
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-            SystemdCgroup = true
 ```
