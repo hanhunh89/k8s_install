@@ -230,14 +230,4 @@ sudo rm -rf ~/.kube/*
 
 sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
-
-
-```
-## check pod log
-```
-kubectl describe pod -n kube-system coredns-5dd5756b68-gt5n2
-```
-## delete pod
-```
-kubectl delete pod -n default my-httpd-7547bdb59f-rhntx
 ```
