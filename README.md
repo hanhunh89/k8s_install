@@ -197,7 +197,7 @@ copy "kubeadm join ~ " and paste on workter node.
 
 ## [worker] rm containerd config
 ```
-sudo rm /etc/containerd/config
+sudo rm /etc/containerd/config.toml
 sudo service containerd restart
 ```
 
