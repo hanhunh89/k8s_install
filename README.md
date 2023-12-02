@@ -8,7 +8,7 @@ install k8s in gcp e2c<br>
 e2c use debian
 
 [master] indicates performing tasks on the master server.<br>
-[worker] indicates performing tasks on the master server.<br>
+[worker] indicates performing tasks on the worker server.<br>
 [master, worker] means both.
 
 ## [master,worker] linux update
