@@ -65,7 +65,7 @@ sudo apt-get update
 sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
 ```
 
-## [master] change containerd config 
+## [master, worker] change containerd config 
 you can find detail in https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
 ```
 # change config.toml file to default
@@ -195,11 +195,6 @@ kubeadm join 10.178.0.13:6443 --token b6kdl1.5267eqpt8jd2bi2x --discovery-token-
 ```
 copy "kubeadm join ~ " and paste on workter node.
 
-## [worker] rm containerd config
-```
-sudo rm /etc/containerd/config.toml
-sudo service containerd restart
-```
 
 ## [worker] join to master
 ```
