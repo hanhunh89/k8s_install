@@ -82,7 +82,7 @@ In k8s document, you can make config.toml with small config.
 But... I got errorr... I don't know why.<br>
 But, if you write empty config, containerd read default config.<br>
 So, i just make config file with default config, and change it.<br>
-I don't think it is perfect why, but it works!<br>
+I don't think it is perfect way, but it works!<br>
 
 And, why i use sandbox_image version 3.9? <br>
 When i use default version, 3.6, i get error in "kubeadm init" <br>
