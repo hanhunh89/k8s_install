@@ -227,3 +227,8 @@ sudo rm -rf ~/.kube/*
 sudo apt install -y kubeadm kubelet kubectl kubernetes-cni
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 ```
+
+## get all resources in kubernetes
+```
+kubectl get all --all-namespaces
+```
