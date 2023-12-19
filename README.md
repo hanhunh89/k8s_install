@@ -87,7 +87,8 @@ I don't think it is perfect why, but it works!<br>
 And, why i use sandbox_image version 3.9? <br>
 When i use default version, 3.6, i get error in "kubeadm init" <br>
 error said, i have to use version 3.9. So i changed it.<br>
-<p>$\bf{\large{\color{#DD6565}If \ you \ use \ not \ good \ sandbox \ version, \ your \ pod \ go \ to \ CrashLoopBackOff, \ restart \ again \ again \ again... }}$</p>
+
+# If you use not good sandbox version, your pod go to CrashLoopBackOff, restart again again again... 
 
 
 ## [master] create cluster with kubeadm
